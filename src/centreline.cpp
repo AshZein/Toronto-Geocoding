@@ -50,9 +50,10 @@ StreetNetworkSoA loadCentreline(const std::string& gpkgPath) {
 
     while ((poFeature = poLayer->GetNextFeature()) != nullptr) {
         int64_t segId = (idx_id >= 0 && !poFeature->IsFieldNull(idx_id)) ? poFeature->GetFieldAsInteger64(idx_id) : 0;
-        std::string streetName = (idx_street >= 0) ? poFeature->GetFieldAsString(idx_street) : "";
-        std::transform(streetName.begin(), streetName.end(), streetName.begin(), 
-            [](unsigned char c){return std::toupper(c)} );
+        std::string streetNameStorage = (idx_street >= 0) ? poFeature->GetFieldAsString(idx_street) : "";
+        char* streetName = streetNameStorage.data();
+        std::transform(streetName, streetName + streetNameStorage.size(), streetName,
+            [](unsigned char c){return std::toupper(c);} );
 
         int loL = (idx_lo_l >= 0 && !poFeature->IsFieldNull(idx_lo_l)) ? poFeature->GetFieldAsInteger(idx_lo_l) : 0;
         int hiL = (idx_hi_l >= 0 && !poFeature->IsFieldNull(idx_hi_l)) ? poFeature->GetFieldAsInteger(idx_hi_l) : 0;
