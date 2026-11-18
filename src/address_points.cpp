@@ -9,7 +9,7 @@ struct AddressPoint {
     int centreline_id;
     double lon;
     double lat;
-    int house_number;
+    int address_number;
 };
 
 // One giant flat vector of all address points in Toronto, sorted by centreline_id
@@ -35,7 +35,7 @@ void ingestAddressPoints(const std::string& gpkgPath) {
     while ((poFeature = poLayer->GetNextFeature()) != nullptr) {
         AddressPoint addrPoint;
         addrPoint.centreline_id = poFeature->GetFieldAsInteger("CENTRELINE_ID");
-        addrPoint.house_number = poFeature->GetFieldAsInteger("ADDRESS_NUMBER");
+        addrPoint.address_number = poFeature->GetFieldAsInteger("ADDRESS_NUMBER");
 
         OGRGeometry* poGeometry = poFeature->GetGeometryRef();
         if (poGeometry != nullptr) {
@@ -83,7 +83,7 @@ int main() {
         std::cout << "Centreline ID: " << addr.centreline_id
                   << ", Lon: " << addr.lon
                   << ", Lat: " << addr.lat
-                  << ", House Number: " << addr.house_number << std::endl;
+                  << ", Address Number: " << addr.address_number << std::endl;
     }
 
     return 0;
