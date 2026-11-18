@@ -50,8 +50,10 @@ StreetNetworkSoA loadCentreline(const std::string& gpkgPath) {
 
     while ((poFeature = poLayer->GetNextFeature()) != nullptr) {
         int64_t segId = (idx_id >= 0 && !poFeature->IsFieldNull(idx_id)) ? poFeature->GetFieldAsInteger64(idx_id) : 0;
-        const char* streetName = (idx_street >= 0) ? poFeature->GetFieldAsString(idx_street) : "";
-        
+        std::string streetName = (idx_street >= 0) ? poFeature->GetFieldAsString(idx_street) : "";
+        std::transform(streetName.begin(), streetName.end(), streetName.begin(), 
+            [](unsigned char c){return std::toupper(c)} );
+
         int loL = (idx_lo_l >= 0 && !poFeature->IsFieldNull(idx_lo_l)) ? poFeature->GetFieldAsInteger(idx_lo_l) : 0;
         int hiL = (idx_hi_l >= 0 && !poFeature->IsFieldNull(idx_hi_l)) ? poFeature->GetFieldAsInteger(idx_hi_l) : 0;
         int loR = (idx_lo_r >= 0 && !poFeature->IsFieldNull(idx_lo_r)) ? poFeature->GetFieldAsInteger(idx_lo_r) : 0;
@@ -65,7 +67,7 @@ StreetNetworkSoA loadCentreline(const std::string& gpkgPath) {
                 int numPoints = poLine->getNumPoints();
                 if (numPoints > 0) {
                     net.centreline_ids.push_back(id);
-                    net.street_names.push_back(name ? name : "");
+                    net.street_names.push_back(name ?name : "");
                     net.lo_num_l.push_back(ll);
                     net.hi_num_l.push_back(hl);
                     net.lo_num_r.push_back(lr);
