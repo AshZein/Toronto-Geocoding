@@ -2,6 +2,7 @@
 
 #include <gdal_priv.h>
 #include <ogrsf_frmts.h>
+#include <cstdint>
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -50,6 +51,10 @@ class GeocodingEngine {
         std::vector<AddressPoint> addresses_;
         std::unordered_map<std::string, std::vector<int>> street_index_;
 
+        std::vector<int64_t> unique_cids_;          // Sorted unique CENTRELINE_IDs (size K)
+        std::vector<uint32_t> cid_addr_offsets_;    // CSR offsets into cid_addr_indices_ (size K + 1)
+        std::vector<uint32_t> cid_addr_indices_;    // Contiguous indices into addresses_ (size N)
+
     public:
         GeocodingEngine() = default;
         // Initialize and load both datasets
@@ -58,6 +63,7 @@ class GeocodingEngine {
             
             loadCentrelines(centrelineGpkg);
             loadAddressPoints(addressGpkg);
+            buildAddressIndex();
             
             if (net_.street_names.empty()) {
                 std::cerr << "Error: Street network failed to load.\n";
@@ -157,6 +163,32 @@ class GeocodingEngine {
             return results;
         }
 
+        std::vector<AddressPoint> findAddressPointsByCentreline(int64_t targetCentrelineId) const {
+            std::vector<AddressPoint> matches;
+            if (targetCentrelineId <= 0 || unique_cids_.empty()) {
+                return matches;
+            }
+
+            auto it = std::lower_bound(unique_cids_.begin(), unique_cids_.end(), targetCentrelineId);
+            if (it == unique_cids_.end() || *it != targetCentrelineId) {
+                return matches;
+            }
+
+            size_t bucketIdx = static_cast<size_t>(std::distance(unique_cids_.begin(), it));
+            uint32_t start = cid_addr_offsets_[bucketIdx];
+            uint32_t end   = cid_addr_offsets_[bucketIdx + 1];
+
+            matches.reserve(end - start);
+            for (uint32_t pos = start; pos < end; ++pos) {
+                uint32_t addrIdx = cid_addr_indices_[pos];
+                if (addrIdx < addresses_.size()) {
+                    matches.push_back(addresses_[addrIdx]);
+                }
+            }
+
+            return matches;
+        }
+
     private:
         void loadCentrelines(const std::string& gpkgPath) {
             GDALAllRegister();
@@ -242,6 +274,7 @@ class GeocodingEngine {
             GDALClose(poDS);
             return;
         }
+
         void loadAddressPoints(const std::string& gpkgPath) {
             GDALAllRegister();
             GDALDataset* poDS = (GDALDataset*)GDALOpenEx(gpkgPath.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL);
@@ -304,5 +337,62 @@ class GeocodingEngine {
             for (size_t i = 0; i < net_.street_names.size(); ++i) {
                 street_index_[net_.street_names[i]].push_back(static_cast<int>(i));
             }
+        }
+
+        void buildAddressIndex() {
+            unique_cids_.clear();
+            cid_addr_offsets_.clear();
+            cid_addr_indices_.clear();
+
+            const size_t numAddrs = addresses_.size();
+            if (numAddrs == 0) {
+                cid_addr_offsets_.push_back(0);
+                return;
+            }
+
+            struct CidAddrPair {
+                int64_t cid;
+                uint32_t addr_idx;
+            };
+
+            std::vector<CidAddrPair> pairs;
+            pairs.reserve(numAddrs);
+
+            for (uint32_t i = 0; i < static_cast<uint32_t>(numAddrs); ++i) {
+                int64_t cid = static_cast<int64_t>(addresses_[i].centreline_id);
+                if (cid > 0) { // Skip unlinked/zero CENTRELINE_IDs
+                    pairs.push_back({cid, i});
+                }
+            }
+
+            if (pairs.empty()) {
+                cid_addr_offsets_.push_back(0);
+                return;
+            }
+
+            // Sort by centreline_id; std::sort is fast and keeps equal cids contiguous
+            std::sort(pairs.begin(), pairs.end(),
+                [](const CidAddrPair& a, const CidAddrPair& b) {
+                    if (a.cid != b.cid) return a.cid < b.cid;
+                    return a.addr_idx < b.addr_idx;
+                });
+
+            cid_addr_indices_.reserve(pairs.size());
+            cid_addr_offsets_.reserve(pairs.size() / 2 + 1);
+            cid_addr_offsets_.push_back(0);
+
+            int64_t currentCid = pairs[0].cid;
+            unique_cids_.push_back(currentCid);
+
+            for (const auto& p : pairs) {
+                if (p.cid != currentCid) {
+                    cid_addr_offsets_.push_back(static_cast<uint32_t>(cid_addr_indices_.size()));
+                    currentCid = p.cid;
+                    unique_cids_.push_back(currentCid);
+                }
+                cid_addr_indices_.push_back(p.addr_idx);
+            }
+
+            cid_addr_offsets_.push_back(static_cast<uint32_t>(cid_addr_indices_.size()));
         }
 };
