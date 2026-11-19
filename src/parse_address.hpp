@@ -1,8 +1,11 @@
+#pragma once
+
 #include <algorithm>
 #include <cctype>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 struct ParsedAddress {
@@ -17,7 +20,7 @@ inline std::string_view trimView(std::string_view sv) {
         sv.remove_prefix(1);
     }
     while (!sv.empty() && std::isspace(static_cast<unsigned char>(sv.back()))) {
-        sv.remove_back(1);
+        sv.remove_suffix(1);
     }
     return sv;
 }
@@ -30,26 +33,95 @@ inline bool isAllDigits(std::string_view sv) {
     return true;
 }
 
+inline std::string toUpperAscii(std::string_view input) {
+    std::string out(input);
+    std::transform(out.begin(), out.end(), out.begin(),
+        [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    return out;
+}
+
+inline std::vector<std::string_view> tokenizeWhitespace(std::string_view text) {
+    std::vector<std::string_view> tokens;
+    size_t i = 0;
+    const size_t n = text.size();
+
+    while (i < n) {
+        while (i < n && std::isspace(static_cast<unsigned char>(text[i]))) {
+            ++i;
+        }
+        if (i >= n) break;
+
+        size_t start = i;
+        while (i < n && !std::isspace(static_cast<unsigned char>(text[i]))) {
+            ++i;
+        }
+        tokens.emplace_back(text.substr(start, i - start));
+    }
+    return tokens;
+}
+
+inline std::string_view canonicalizeToken(std::string_view rawToken) {
+    static const std::unordered_map<std::string_view, std::string_view> kAliases = {
+        // Street types
+        {"STREET", "ST"},      {"ST.", "ST"},      {"STR", "ST"},
+        {"AVENUE", "AVE"},     {"AVE.", "AVE"},    {"AV", "AVE"},
+        {"BOULEVARD", "BLVD"}, {"BLVD.", "BLVD"},
+        {"DRIVE", "DR"},       {"DR.", "DR"},
+        {"ROAD", "RD"},        {"RD.", "RD"},
+        {"COURT", "CT"},       {"CT.", "CT"},
+        {"CRESCENT", "CRES"},  {"CRES.", "CRES"},
+        {"PLACE", "PL"},       {"PL.", "PL"},
+        {"PARKWAY", "PKWY"},   {"PKWY.", "PKWY"},
+        {"TRAIL", "TRL"},      {"TRL.", "TRL"},
+        {"LANE", "LN"},        {"LN.", "LN"},
+        {"CIRCLE", "CIR"},     {"CIR.", "CIR"},
+
+        // Directionals
+        {"NORTH", "N"},        {"N.", "N"},
+        {"SOUTH", "S"},        {"S.", "S"},
+        {"EAST", "E"},         {"E.", "E"},
+        {"WEST", "W"},         {"W.", "W"},
+    };
+
+    auto it = kAliases.find(rawToken);
+    return (it != kAliases.end()) ? it->second : rawToken;
+}
+
+inline std::string normalizeStreetName(std::string_view rawStreetName) {
+    std::string upper = toUpperAscii(rawStreetName);
+    auto rawTokens = tokenizeWhitespace(upper);
+
+    std::string normalized;
+    for (size_t i = 0; i < rawTokens.size(); ++i) {
+        std::string_view canon = canonicalizeToken(rawTokens[i]);
+        if (canon.empty()) continue;
+        if (!normalized.empty()) {
+            normalized.push_back(' ');
+        }
+        normalized.append(canon.data(), canon.size());
+    }
+    return normalized;
+}
+
 inline ParsedAddress parseStreetAddress(std::string_view rawAddress) {
     ParsedAddress out;
     std::string_view rest = trimView(rawAddress);
     if (rest.empty()) return out;
 
-    // 1. Optional leading unit designator like "#4B-" or "APT 2, 100 KING ST W"
-    // If there is a comma, split off trailing city/province/postal for now
+    // 1. If there is a comma, split off trailing city/province/postal for now
     size_t firstComma = rest.find(',');
     if (firstComma != std::string_view::npos) {
         out.leftover = std::string(trimView(rest.substr(firstComma + 1)));
         rest = trimView(rest.substr(0, firstComma));
     }
 
-    // 2. Extract leading tokens using your whitespace tokenizer
+    // 2. Extract leading tokens using whitespace tokenizer
     auto tokens = tokenizeWhitespace(rest);
     if (tokens.empty()) return out;
 
     size_t idx = 0;
 
-    // Handle unit-first formats like "APT 5 100 KING ST W"
+    // Handle unit-first formats like "APT 5 100 KING ST W" or "#4B 100 KING ST W"
     std::string upperFirst = toUpperAscii(tokens[0]);
     if ((upperFirst == "APT" || upperFirst == "UNIT" || upperFirst == "SUITE" || upperFirst == "STE")
         && tokens.size() >= 3 && isAllDigits(tokens[1])) {
