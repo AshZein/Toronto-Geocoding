@@ -130,7 +130,7 @@ ParsedAddress parseStreetAddress(std::string_view rawAddress) {
             for (unsigned char c : primaryNum) {
                 parsedNum = parsedNum * 10 + (c - '0');
             }
-            out.house_number = parsedNum;
+            out.address_number = parsedNum;
             ++idx;
         }
     }

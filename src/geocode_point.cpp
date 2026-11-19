@@ -2,26 +2,10 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <limits>
 #include "GeocodingEngine.hpp"
 #include "parse_address.hpp"
-#include "coordinate_geometry.hpp"
-
-std::pair<double, double> getCentroid(const std::vector<std::pair<double, double>>& coordinates) {
-    if (coordinates.empty()) {
-        return {0.0, 0.0};
-    }
-
-    double sumLon = 0.0;
-    double sumLat = 0.0;
-
-    for (const auto& coord : coordinates) {
-        sumLon += coord.first;
-        sumLat += coord.second;
-    }
-
-    size_t count = coordinates.size();
-    return {sumLon / count, sumLat / count};
-}
+#include "utils/coordinate_geometry.hpp"
 
 // returns centreline_id that matches the given street name and house number, or -1 if not found
 int find_centre_line(const std::vector<Centreline>& centrelines, int address_number) {
@@ -60,14 +44,14 @@ std::vector<Centreline> find_street_segments(const std::string& street_name, con
  * @param target_number The target address number.
  * @return A pair of the closest lower and higher address points.
  */
-std::pair<AdressPoint, AddressPoint> find_closest_address_points(const std::vector<AdressPoint>& addressPoints, int target_number) {
+std::pair<AddressPoint, AddressPoint> find_closest_address_points(const std::vector<AddressPoint>& addressPoints, int target_number) {
     if (addressPoints.empty()) {
         return {AddressPoint(), AddressPoint()};
     }
 
     AddressPoint closestLower, closestHigher;
-    closetLower.address_number = -1; // Initialize to an invalid number
-    closetHigher.address_number = -1; // Initialize to an invalid number
+    closestLower.address_number = -1; // Initialize to an invalid number
+    closestHigher.address_number = -1; // Initialize to an invalid number
     int lowerNumber = std::numeric_limits<int>::min();
     int higherNumber = std::numeric_limits<int>::max();
 
