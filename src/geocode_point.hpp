@@ -77,9 +77,11 @@ std::pair<double, double> geocode_address(std::string address, const GeocodingEn
             std::cout << "Found " << addressPoints.size() << " address points for centreline ID " << matched_centreline_id << ":\n";
             for (const auto& point : addressPoints) {
                 std::cout << "  Address Point: (" << point.lon << ", " << point.lat << ")\n";
+                //TODO: Find closest address point to the found address number
             }
         } else {
             std::cout << "No address points found for centreline ID " << matched_centreline_id << ".\n";
+            // TODO: If no address points are found, we must divide the entire line segment into equal parts and return the midpoint of the segment as the geocoded location
         }
 
     } else {
