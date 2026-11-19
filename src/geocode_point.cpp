@@ -21,9 +21,28 @@ std::pair<double, double> getCentroid(const std::vector<std::pair<double, double
     return {sumLon / count, sumLat / count};
 }
 
+// returns centreline_id that matches the given street name and house number, or -1 if not found
+int find_centre_line(std::vector<Centreline> centrelines, int house_number) {
+    for (size_t i = 0; i < centrelines.size(); ++i) {
+        const Centreline& entry = centrelines[i];
+        std::cout << "Centreline ID: " << entry.centreline_id << "\n";
+        std::cout << "Street Name: " << entry.street_name << "\n";
+        std::cout << "Left Range: [" << entry.lo_num_l << ", " << entry.hi_num_l << "]\n";
+        std::cout << "Right Range: [" << entry.lo_num_r << ", " << entry.hi_num_r << "]\n";
+        std::cout << "Coordinates (" << entry.coordinates.size() << " points):\n";
+        for (const auto& coord : entry.coordinates) {
+            std::cout << "  Lon: " << coord.first << ", Lat: " << coord.second << "\n";
+        }
+        std::cout << "----------------------------------------\n";
 
-int find_centre_line(std::vector<Centreline> centrelines){
-    return 0;
+        // Check if the house number falls within either the left or right range
+        if ((house_number >= entry.lo_num_l && house_number <= entry.hi_num_l) ||
+            (house_number >= entry.lo_num_r && house_number <= entry.hi_num_r)) {
+            std::cout << "Match found for house number " << house_number << " in centreline ID " << entry.centreline_id << "\n";
+            return entry.centreline_id;
+        }
+    }
+    return -1;
 }
 
 std::vector<std::Centreline> find_street_segments(std::string street_name){
@@ -45,5 +64,10 @@ std::pair<double, double> geocode_address(std::string address){
     std::cout << "  Street Name: " << parsed.street_name << "\n";
     std::cout << "  Leftover: " << parsed.leftover << "\n";
 
-    find_street_segments(parsed.street_name);
+    int matched_centreline_id = -1;
+    if (parsed.house_number.has_value()) {
+        std::vector<Centreline> centrelines = find_street_segments(parsed.street_name);
+        matched_centreline_id = find_centre_line(centrelines, parsed.house_number.value());
+    }  
+    
 }
