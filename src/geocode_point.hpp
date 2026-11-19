@@ -45,14 +45,14 @@ int find_centre_line(std::vector<Centreline> centrelines, int house_number) {
     return -1;
 }
 
-std::vector<std::Centreline> find_street_segments(std::string street_name){
+std::vector<Centreline> find_street_segments(std::string street_name, const GeocodingEngine& engine){
     std::vector<Centreline> results;
-    results = GeocodingEngine::findStreetSegments(street_name);
+    results = engine.findStreetSegments(street_name);
 
     return results;
 }
 
-std::pair<double, double> geocode_address(std::string address){
+std::pair<double, double> geocode_address(std::string address, const GeocodingEngine& engine) {
     ParsedAddress parsed = parseStreetAddress(address);
     std::cout << "Parsed Address:\n";
     if (parsed.house_number.has_value()) {
@@ -66,17 +66,17 @@ std::pair<double, double> geocode_address(std::string address){
 
     int matched_centreline_id = -1;
     if (parsed.house_number.has_value()) {
-        std::vector<Centreline> centrelines = find_street_segments(parsed.street_name);
+        std::vector<Centreline> centrelines = find_street_segments(parsed.street_name, engine);
         matched_centreline_id = find_centre_line(centrelines, parsed.house_number.value());
     }  
 
     if (matched_centreline_id != -1) {
         std::cout << "Matched Centreline ID: " << matched_centreline_id << "\n";
-        std::vector<AddressPoint> addressPoints = geocodingEngine.findAddressPointsByCentreline(matched_centreline_id);
+        std::vector<AddressPoint> addressPoints = engine.findAddressPointsByCentreline(matched_centreline_id);
         if (!addressPoints.empty()) {
             std::cout << "Found " << addressPoints.size() << " address points for centreline ID " << matched_centreline_id << ":\n";
             for (const auto& point : addressPoints) {
-                std::cout << "  Address Point: (" << point.longitude << ", " << point.latitude << ")\n";
+                std::cout << "  Address Point: (" << point.lon << ", " << point.lat << ")\n";
             }
         } else {
             std::cout << "No address points found for centreline ID " << matched_centreline_id << ".\n";
