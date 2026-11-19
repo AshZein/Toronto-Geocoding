@@ -69,5 +69,21 @@ std::pair<double, double> geocode_address(std::string address){
         std::vector<Centreline> centrelines = find_street_segments(parsed.street_name);
         matched_centreline_id = find_centre_line(centrelines, parsed.house_number.value());
     }  
-    
+
+    if (matched_centreline_id != -1) {
+        std::cout << "Matched Centreline ID: " << matched_centreline_id << "\n";
+        std::vector<AddressPoint> addressPoints = geocodingEngine.findAddressPointsByCentreline(matched_centreline_id);
+        if (!addressPoints.empty()) {
+            std::cout << "Found " << addressPoints.size() << " address points for centreline ID " << matched_centreline_id << ":\n";
+            for (const auto& point : addressPoints) {
+                std::cout << "  Address Point: (" << point.longitude << ", " << point.latitude << ")\n";
+            }
+        } else {
+            std::cout << "No address points found for centreline ID " << matched_centreline_id << ".\n";
+        }
+
+    } else {
+        std::cout << "No matching centreline found for the given address.\n";
+    }
+    return {0.0, 0.0}; // Placeholder for actual geocoded coordinates
 }
