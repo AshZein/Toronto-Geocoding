@@ -4,6 +4,7 @@
 #include <iostream>
 #include "GeocodingEngine.hpp"
 #include "parse_address.hpp"
+#include "coordinate_geometry.hpp"
 
 std::pair<double, double> getCentroid(const std::vector<std::pair<double, double>>& coordinates) {
     if (coordinates.empty()) {
@@ -82,6 +83,7 @@ std::pair<AdressPoint, AddressPoint> find_closest_address_points(const std::vect
     }
     return {closestLower, closestHigher};
 }
+
 /**
  * Finds the longitude and latitude for a target address number between two address points.
  * @param lowerPoint The lower address point.
@@ -95,6 +97,53 @@ std::pair<double, double> find_lon_lat(const AddressPoint& lowerPoint, const Add
     double lon = lowerPoint.lon + fraction * (upperPoint.lon - lowerPoint.lon);
     double lat = lowerPoint.lat + fraction * (upperPoint.lat - lowerPoint.lat);
     return {lon, lat};
+}
+
+/**
+ * Finds the longitude and latitude for a target address number using a centreline entry.
+ * @param centreline The centreline entry.
+ * @param target_number The target address number.
+ * @return A pair of the longitude and latitude.
+ */
+std::pair<double, double> find_lon_lat(const Centreline& centreline, int target_number) {
+    double total_segment_length = 0.0;
+    std::vector<double> segment_lengths;
+
+    for (size_t i = 1; i < centreline.coordinates.size(); ++i) {
+        double lon1 = centreline.coordinates[i - 1].first;
+        double lat1 = centreline.coordinates[i - 1].second;
+        double lon2 = centreline.coordinates[i].first;
+        double lat2 = centreline.coordinates[i].second;
+
+        double segment_length = calculate_distance(lon1, lat1, lon2, lat2);
+        segment_lengths.push_back(segment_length);
+        total_segment_length += segment_length;
+    }
+
+    int lo_num = std::min(centreline.lo_num_l, centreline.lo_num_r);
+    int hi_num = std::max(centreline.hi_num_l, centreline.hi_num_r);
+    double fraction = static_cast<double>(target_number - lo_num) / (hi_num - lo_num);
+
+    // Need to find the point along the total line segment that corresponds to this fraction of the total length
+    double target_distance = fraction * total_segment_length;
+    double accumulated_distance = 0.0;
+    for (size_t i = 0; i < segment_lengths.size(); ++i) {
+        if (accumulated_distance + segment_lengths[i] >= target_distance) {
+            double remaining_distance = target_distance - accumulated_distance;
+            double segment_fraction = remaining_distance / segment_lengths[i];
+
+            double lon1 = centreline.coordinates[i].first;
+            double lat1 = centreline.coordinates[i].second;
+            double lon2 = centreline.coordinates[i + 1].first;
+            double lat2 = centreline.coordinates[i + 1].second;
+
+            double lon = lon1 + segment_fraction * (lon2 - lon1);
+            double lat = lat1 + segment_fraction * (lat2 - lat1);
+            return {lon, lat};
+        }
+        accumulated_distance += segment_lengths[i];
+    }
+    return {0.0, 0.0};
 }
 
 std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine) {
