@@ -65,6 +65,8 @@ std::pair<AdressPoint, AddressPoint> find_closest_address_points(const std::vect
     }
 
     AddressPoint closestLower, closestHigher;
+    closetLower.address_number = -1; // Initialize to an invalid number
+    closetHigher.address_number = -1; // Initialize to an invalid number
     int lowerNumber = std::numeric_limits<int>::min();
     int higherNumber = std::numeric_limits<int>::max();
 
@@ -79,6 +81,20 @@ std::pair<AdressPoint, AddressPoint> find_closest_address_points(const std::vect
         }
     }
     return {closestLower, closestHigher};
+}
+/**
+ * Finds the longitude and latitude for a target address number between two address points.
+ * @param lowerPoint The lower address point.
+ * @param upperPoint The upper address point.
+ * @param target_number The target address number.
+ * @return A pair of the longitude and latitude.
+ */
+std::pair<double, double> find_lon_lat(const AddressPoint& lowerPoint, const AddressPoint& upperPoint, int target_number) {
+    // Simple linear interpolation
+    double fraction = static_cast<double>(target_number - lowerPoint.address_number) / (upperPoint.address_number - lowerPoint.address_number);
+    double lon = lowerPoint.lon + fraction * (upperPoint.lon - lowerPoint.lon);
+    double lat = lowerPoint.lat + fraction * (upperPoint.lat - lowerPoint.lat);
+    return {lon, lat};
 }
 
 std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine) {
@@ -104,9 +120,17 @@ std::pair<double, double> geocode_address(const std::string& address, const Geoc
         std::vector<AddressPoint> addressPoints = engine.findAddressPointsByCentreline(matched_centreline_id);
         if (!addressPoints.empty()) {
             std::cout << "Found " << addressPoints.size() << " address points for centreline ID " << matched_centreline_id << ":\n";
-            for (const auto& point : addressPoints) {
-                std::cout << "  Address Point: (" << point.lon << ", " << point.lat << ")\n";
-                //TODO: Find closest address points to the found address number
+            std::pair<AddressPoint, AddressPoint> closestPoints = find_closest_address_points(addressPoints, parsed.address_number.value());
+
+            if (closestPoints.first.address_number != -1 && closestPoints.second.address_number != -1) {
+                std::cout << "Closest Lower Address Point: " << closestPoints.first.address_number << " at (" << closestPoints.first.lon << ", " << closestPoints.first.lat << ")\n";
+                std::cout << "Closest Higher Address Point: " << closestPoints.second.address_number << " at (" << closestPoints.second.lon << ", " << closestPoints.second.lat << ")\n";
+
+                std::pair<double, double> geocodedLocation = find_lon_lat(closestPoints.first, closestPoints.second, parsed.address_number.value());
+                std::cout << "Geocoded Location: (" << geocodedLocation.first << ", " << geocodedLocation.second << ")\n";
+                return geocodedLocation;
+            } else {
+                std::cout << "Could not find valid closest address points for interpolation.\n";
             }
         } else {
             std::cout << "No address points found for centreline ID " << matched_centreline_id << ".\n";
