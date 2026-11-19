@@ -139,10 +139,11 @@ std::pair<double, double> geocode_address(const std::string& address, const Geoc
         std::cout << "  House Number: " << parsed.address_number.value() << "\n";
     } else {
         std::cout << "  House Number: (not found)\n";
+        return {0.0, 0.0}; // Placeholder for actual geocoded coordinates
     }
-    std::cout << "  Unit: " << parsed.unit << "\n";
-    std::cout << "  Street Name: " << parsed.street_name << "\n";
-    std::cout << "  Leftover: " << parsed.leftover << "\n";
+    // std::cout << "  Unit: " << parsed.unit << "\n";
+    // std::cout << "  Street Name: " << parsed.street_name << "\n";
+    // std::cout << "  Leftover: " << parsed.leftover << "\n";
 
     Centreline matched_centreline;;
     if (parsed.address_number.has_value()) {
@@ -150,35 +151,36 @@ std::pair<double, double> geocode_address(const std::string& address, const Geoc
         matched_centreline = find_centre_line(centrelines, parsed.address_number.value());
         //matched_centreline = centrelines.empty() ? -1 : centrelines[0].centreline_id;
     }else{
-        std::cout << "No house number provided in the address.\n";
+       // std::cout << "No house number provided in the address.\n";
         return {0.0, 0.0}; // Placeholder for actual geocoded coordinates
     }
 
 
 
     if (matched_centreline.centreline_id != -1) {
-        std::cout << "Matched Centreline ID: " << matched_centreline.centreline_id << "\n";
+        // std::cout << "Matched Centreline ID: " << matched_centreline.centreline_id << "\n";
         std::vector<AddressPoint> addressPoints = engine.findAddressPointsByCentreline(matched_centreline.centreline_id);
+        std::pair<double, double> geocodedLocation;
         if (!addressPoints.empty()) {
-            std::cout << "Found " << addressPoints.size() << " address points for centreline ID " << matched_centreline.centreline_id << ":\n";
+            //std::cout << "Found " << addressPoints.size() << " address points for centreline ID " << matched_centreline.centreline_id << ":\n";
             std::pair<AddressPoint, AddressPoint> closestPoints = find_closest_address_points(addressPoints, parsed.address_number.value());
-
-            std::pair<double, double> geocodedLocation;
+        
             if (closestPoints.first.address_number != -1 && closestPoints.second.address_number != -1) {
-                std::cout << "Closest Lower Address Point: " << closestPoints.first.address_number << " at (" << closestPoints.first.lon << ", " << closestPoints.first.lat << ")\n";
-                std::cout << "Closest Higher Address Point: " << closestPoints.second.address_number << " at (" << closestPoints.second.lon << ", " << closestPoints.second.lat << ")\n";
+                //std::cout << "Closest Lower Address Point: " << closestPoints.first.address_number << " at (" << closestPoints.first.lon << ", " << closestPoints.first.lat << ")\n";
+               // std::cout << "Closest Higher Address Point: " << closestPoints.second.address_number << " at (" << closestPoints.second.lon << ", " << closestPoints.second.lat << ")\n";
 
                 geocodedLocation = find_lon_lat(closestPoints.first, closestPoints.second, parsed.address_number.value());
-                std::cout << "Geocoded Location: (" << geocodedLocation.first << ", " << geocodedLocation.second << ")\n";
-                return geocodedLocation;
+                //std::cout << "Geocoded Location: (" << geocodedLocation.first << ", " << geocodedLocation.second << ")\n";
             } else {
-                std::cout << "Could not find valid closest address points for interpolation.\n";
+               // std::cout << "Could not find valid closest address points for interpolation.\n";
                 geocodedLocation = find_lon_lat(matched_centreline, parsed.address_number.value());
             }
         } else {
-            std::cout << "No address points found for centreline ID " << matched_centreline.centreline_id << ".\n";
+            //std::cout << "No address points found for centreline ID " << matched_centreline.centreline_id << ".\n";
             // TODO: If no address points are found, we must divide the entire line segment into equal parts and return the midpoint of the segment as the geocoded location
+            geocodedLocation = find_lon_lat(matched_centreline, parsed.address_number.value());
         }
+        return geocodedLocation;
 
     } else {
         std::cout << "No matching centreline found for the given address.\n";

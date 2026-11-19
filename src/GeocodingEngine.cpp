@@ -45,8 +45,8 @@ std::vector<Centreline> GeocodingEngine::findStreetSegments(const std::string& r
     const std::vector<int>& segmentIndices = it->second;
     results.reserve(segmentIndices.size());
 
-    std::cout << "Found " << segmentIndices.size()
-              << " matching segments for \"" << query << "\"\n";
+    // std::cout << "Found " << segmentIndices.size()
+    //           << " matching segments for \"" << query << "\"\n";
 
     for (size_t matchIdx = 0; matchIdx < segmentIndices.size(); ++matchIdx) {
         int segIdx = segmentIndices[matchIdx];
@@ -83,13 +83,13 @@ std::vector<Centreline> GeocodingEngine::findStreetSegments(const std::string& r
 
         size_t numPoints = endCoord - startCoord;
 
-        std::cout << "\n--- Match #" << (matchIdx + 1) << " (SoA index: " << segIdx << ") ---\n"
-                  << "  CENTRELINE_ID : " << cid << "\n"
-                  << "  STREET_NAME   : " << name << "\n"
-                  << "  LEFT  Range   : [" << loL << " .. " << hiL << "]\n"
-                  << "  RIGHT Range   : [" << loR << " .. " << hiR << "]\n"
-                  << "  Coord Slice   : offset [" << startCoord << " .. " << endCoord
-                  << ") (" << numPoints << " vertices)\n";
+        // std::cout << "\n--- Match #" << (matchIdx + 1) << " (SoA index: " << segIdx << ") ---\n"
+        //           << "  CENTRELINE_ID : " << cid << "\n"
+        //           << "  STREET_NAME   : " << name << "\n"
+        //           << "  LEFT  Range   : [" << loL << " .. " << hiL << "]\n"
+        //           << "  RIGHT Range   : [" << loR << " .. " << hiR << "]\n"
+        //           << "  Coord Slice   : offset [" << startCoord << " .. " << endCoord
+        //           << ") (" << numPoints << " vertices)\n";
 
         Centreline entry;
         entry.centreline_id = cid;
@@ -100,13 +100,13 @@ std::vector<Centreline> GeocodingEngine::findStreetSegments(const std::string& r
         entry.hi_num_r      = hiR;
         entry.coordinates.reserve(numPoints);
 
-        std::cout << std::fixed << std::setprecision(6);
+       // std::cout << std::fixed << std::setprecision(6);
         for (size_t v = startCoord; v < endCoord; ++v) {
             double lon = net_.coords_lon[v];
             double lat = (v < net_.coords_lat.size()) ? net_.coords_lat[v] : 0.0;
             entry.coordinates.emplace_back(lon, lat);
-            std::cout << "    v[" << v << "] (local " << (v - startCoord) << "): "
-                      << "lon=" << lon << ", lat=" << lat << "\n";
+            // std::cout << "    v[" << v << "] (local " << (v - startCoord) << "): "
+            //           << "lon=" << lon << ", lat=" << lat << "\n";
         }
 
         results.push_back(std::move(entry));
