@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
+#include <utility>
 
 struct StreetNetworkSoA {
     std::vector<int64_t> centreline_ids;
@@ -69,74 +70,91 @@ class GeocodingEngine {
             return true;
         }
 
-        void findStreetSegments(const std::string& rawStreetName) const {
+        std::vector<Centreline> findStreetSegments(const std::string& rawStreetName) const {
+            std::vector<Centreline> results;
+
             // Normalize input query to uppercase
-            // Normalize input query to uppercase
-    std::string query = rawStreetName;
-    std::transform(query.begin(), query.end(), query.begin(),
-        [](unsigned char c) { return std::toupper(c); });
+            std::string query = rawStreetName;
+            std::transform(query.begin(), query.end(), query.begin(),
+                [](unsigned char c) { return std::toupper(c); });
 
-    auto it = street_index_.find(query);
-    if (it == street_index_.end()) {
-        std::cout << "Street not found: " << query << "\n";
-        return;
-    }
+            auto it = street_index_.find(query);
+            if (it == street_index_.end()) {
+                std::cout << "Street not found: " << query << "\n";
+                return results;
+            }
 
-    const std::vector<int>& segmentIndices = it->second;
-    std::cout << "Found " << segmentIndices.size()
-              << " matching segments for \"" << query << "\"\n";
+            const std::vector<int>& segmentIndices = it->second;
+            results.reserve(segmentIndices.size());
 
-    for (size_t matchIdx = 0; matchIdx < segmentIndices.size(); ++matchIdx) {
-        int segIdx = segmentIndices[matchIdx];
+            std::cout << "Found " << segmentIndices.size()
+                    << " matching segments for \"" << query << "\"\n";
 
-        if (segIdx < 0 || static_cast<size_t>(segIdx) >= net_.centreline_ids.size()) {
-            std::cout << "  [" << matchIdx << "] Invalid SoA index: " << segIdx << "\n";
-            continue;
-        }
+            for (size_t matchIdx = 0; matchIdx < segmentIndices.size(); ++matchIdx) {
+                int segIdx = segmentIndices[matchIdx];
 
-        size_t uSegIdx = static_cast<size_t>(segIdx);
+                if (segIdx < 0 || static_cast<size_t>(segIdx) >= net_.centreline_ids.size()) {
+                    std::cout << "  [" << matchIdx << "] Invalid SoA index: " << segIdx << "\n";
+                    continue;
+                }
 
-        int64_t cid = net_.centreline_ids[uSegIdx];
-        const std::string& name = (uSegIdx < net_.street_names.size())
-            ? net_.street_names[uSegIdx]
-            : query;
+                size_t uSegIdx = static_cast<size_t>(segIdx);
 
-        int loL = (uSegIdx < net_.lo_num_l.size()) ? net_.lo_num_l[uSegIdx] : 0;
-        int hiL = (uSegIdx < net_.hi_num_l.size()) ? net_.hi_num_l[uSegIdx] : 0;
-        int loR = (uSegIdx < net_.lo_num_r.size()) ? net_.lo_num_r[uSegIdx] : 0;
-        int hiR = (uSegIdx < net_.hi_num_r.size()) ? net_.hi_num_r[uSegIdx] : 0;
+                int64_t cid = net_.centreline_ids[uSegIdx];
+                const std::string& name = (uSegIdx < net_.street_names.size())
+                    ? net_.street_names[uSegIdx]
+                    : query;
 
-        size_t startCoord = 0;
-        size_t endCoord = net_.coords_lon.size();
+                int loL = (uSegIdx < net_.lo_num_l.size()) ? net_.lo_num_l[uSegIdx] : 0;
+                int hiL = (uSegIdx < net_.hi_num_l.size()) ? net_.hi_num_l[uSegIdx] : 0;
+                int loR = (uSegIdx < net_.lo_num_r.size()) ? net_.lo_num_r[uSegIdx] : 0;
+                int hiR = (uSegIdx < net_.hi_num_r.size()) ? net_.hi_num_r[uSegIdx] : 0;
 
-        if (uSegIdx < net_.segment_offsets.size() && net_.segment_offsets[uSegIdx] >= 0) {
-            startCoord = std::min(static_cast<size_t>(net_.segment_offsets[uSegIdx]), net_.coords_lon.size());
-        }
-        if (uSegIdx + 1 < net_.segment_offsets.size() && net_.segment_offsets[uSegIdx + 1] >= 0) {
-            endCoord = std::min(static_cast<size_t>(net_.segment_offsets[uSegIdx + 1]), net_.coords_lon.size());
-        }
-        if (endCoord < startCoord) {
-            endCoord = startCoord;
-        }
+                size_t startCoord = 0;
+                size_t endCoord = net_.coords_lon.size();
 
-        size_t numPoints = endCoord - startCoord;
+                if (uSegIdx < net_.segment_offsets.size() && net_.segment_offsets[uSegIdx] >= 0) {
+                    startCoord = std::min(static_cast<size_t>(net_.segment_offsets[uSegIdx]), net_.coords_lon.size());
+                }
+                if (uSegIdx + 1 < net_.segment_offsets.size() && net_.segment_offsets[uSegIdx + 1] >= 0) {
+                    endCoord = std::min(static_cast<size_t>(net_.segment_offsets[uSegIdx + 1]), net_.coords_lon.size());
+                }
+                if (endCoord < startCoord) {
+                    endCoord = startCoord;
+                }
 
-        std::cout << "\n--- Match #" << (matchIdx + 1) << " (SoA index: " << segIdx << ") ---\n"
-                  << "  CENTRELINE_ID : " << cid << "\n"
-                  << "  STREET_NAME   : " << name << "\n"
-                  << "  LEFT  Range   : [" << loL << " .. " << hiL << "]\n"
-                  << "  RIGHT Range   : [" << loR << " .. " << hiR << "]\n"
-                  << "  Coord Slice   : offset [" << startCoord << " .. " << endCoord
-                  << ") (" << numPoints << " vertices)\n";
+                size_t numPoints = endCoord - startCoord;
 
-        std::cout << std::fixed << std::setprecision(6);
-        for (size_t v = startCoord; v < endCoord; ++v) {
-            double lon = net_.coords_lon[v];
-            double lat = (v < net_.coords_lat.size()) ? net_.coords_lat[v] : 0.0;
-            std::cout << "    v[" << v << "] (local " << (v - startCoord) << "): "
-                      << "lon=" << lon << ", lat=" << lat << "\n";
-        }
-    }
+                std::cout << "\n--- Match #" << (matchIdx + 1) << " (SoA index: " << segIdx << ") ---\n"
+                        << "  CENTRELINE_ID : " << cid << "\n"
+                        << "  STREET_NAME   : " << name << "\n"
+                        << "  LEFT  Range   : [" << loL << " .. " << hiL << "]\n"
+                        << "  RIGHT Range   : [" << loR << " .. " << hiR << "]\n"
+                        << "  Coord Slice   : offset [" << startCoord << " .. " << endCoord
+                        << ") (" << numPoints << " vertices)\n";
+
+                Centreline entry;
+                entry.centreline_id = cid;
+                entry.street_name   = name;
+                entry.lo_num_l      = loL;
+                entry.hi_num_l      = hiL;
+                entry.lo_num_r      = loR;
+                entry.hi_num_r      = hiR;
+                entry.coordinates.reserve(numPoints);
+
+                std::cout << std::fixed << std::setprecision(6);
+                for (size_t v = startCoord; v < endCoord; ++v) {
+                    double lon = net_.coords_lon[v];
+                    double lat = (v < net_.coords_lat.size()) ? net_.coords_lat[v] : 0.0;
+                    entry.coordinates.emplace_back(lon, lat);
+                    std::cout << "    v[" << v << "] (local " << (v - startCoord) << "): "
+                            << "lon=" << lon << ", lat=" << lat << "\n";
+                }
+
+                results.push_back(std::move(entry));
+            }
+
+            return results;
         }
 
     private:
