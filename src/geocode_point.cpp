@@ -1,3 +1,4 @@
+#include "geocode_point.hpp"
 #include <vector>
 #include <string>
 #include <iostream>

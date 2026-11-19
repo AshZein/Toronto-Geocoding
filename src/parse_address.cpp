@@ -1,5 +1,4 @@
-#pragma once
-
+#include "parse_address.hpp"
 #include <algorithm>
 #include <cctype>
 #include <optional>
@@ -7,13 +6,6 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
-
-struct ParsedAddress {
-    std::optional<int> house_number;
-    std::string unit;          // optional: e.g., "4B", "PH1"
-    std::string street_name;   // normalized, e.g., "KING ST W"
-    std::string leftover;      // optional: city/postal if included
-};
 
 inline std::string_view trimView(std::string_view sv) {
     while (!sv.empty() && std::isspace(static_cast<unsigned char>(sv.front()))) {
