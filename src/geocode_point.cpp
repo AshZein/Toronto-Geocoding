@@ -23,7 +23,7 @@ std::pair<double, double> getCentroid(const std::vector<std::pair<double, double
 }
 
 // returns centreline_id that matches the given street name and house number, or -1 if not found
-int find_centre_line(const std::vector<Centreline>& centrelines, int house_number) {
+int find_centre_line(const std::vector<Centreline>& centrelines, int address_number) {
     for (size_t i = 0; i < centrelines.size(); ++i) {
         const Centreline& entry = centrelines[i];
         std::cout << "Centreline ID: " << entry.centreline_id << "\n";
@@ -37,9 +37,9 @@ int find_centre_line(const std::vector<Centreline>& centrelines, int house_numbe
         std::cout << "----------------------------------------\n";
 
         // Check if the house number falls within either the left or right range
-        if ((house_number >= entry.lo_num_l && house_number <= entry.hi_num_l) ||
-            (house_number >= entry.lo_num_r && house_number <= entry.hi_num_r)) {
-            std::cout << "Match found for house number " << house_number << " in centreline ID " << entry.centreline_id << "\n";
+        if ((address_number >= entry.lo_num_l && address_number <= entry.hi_num_l) ||
+            (address_number >= entry.lo_num_r && address_number <= entry.hi_num_r)) {
+            std::cout << "Match found for house number " << address_number << " in centreline ID " << entry.centreline_id << "\n";
             return entry.centreline_id;
         }
     }
@@ -56,8 +56,8 @@ std::vector<Centreline> find_street_segments(const std::string& street_name, con
 std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine) {
     ParsedAddress parsed = parseStreetAddress(address);
     std::cout << "Parsed Address:\n";
-    if (parsed.house_number.has_value()) {
-        std::cout << "  House Number: " << parsed.house_number.value() << "\n";
+    if (parsed.address_number.has_value()) {
+        std::cout << "  House Number: " << parsed.address_number.value() << "\n";
     } else {
         std::cout << "  House Number: (not found)\n";
     }
@@ -66,9 +66,9 @@ std::pair<double, double> geocode_address(const std::string& address, const Geoc
     std::cout << "  Leftover: " << parsed.leftover << "\n";
 
     int matched_centreline_id = -1;
-    if (parsed.house_number.has_value()) {
+    if (parsed.address_number.has_value()) {
         std::vector<Centreline> centrelines = find_street_segments(parsed.street_name, engine);
-        matched_centreline_id = find_centre_line(centrelines, parsed.house_number.value());
+        matched_centreline_id = find_centre_line(centrelines, parsed.address_number.value());
     }  
 
     if (matched_centreline_id != -1) {
@@ -78,7 +78,7 @@ std::pair<double, double> geocode_address(const std::string& address, const Geoc
             std::cout << "Found " << addressPoints.size() << " address points for centreline ID " << matched_centreline_id << ":\n";
             for (const auto& point : addressPoints) {
                 std::cout << "  Address Point: (" << point.lon << ", " << point.lat << ")\n";
-                //TODO: Find closest address point to the found address number
+                //TODO: Find closest address points to the found address number
             }
         } else {
             std::cout << "No address points found for centreline ID " << matched_centreline_id << ".\n";

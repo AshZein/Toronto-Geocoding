@@ -8,7 +8,7 @@
 #include <vector>
 
 struct ParsedAddress {
-    std::optional<int> house_number;
+    std::optional<int> address_number;
     std::string unit;          // optional: e.g., "4B", "PH1"
     std::string street_name;   // normalized, e.g., "KING ST W"
     std::string leftover;      // optional: city/postal if included
