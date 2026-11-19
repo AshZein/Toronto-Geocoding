@@ -1,13 +1,6 @@
 #include "parse_address.hpp"
-#include <algorithm>
-#include <cctype>
-#include <optional>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <vector>
 
-inline std::string_view trimView(std::string_view sv) {
+std::string_view trimView(std::string_view sv) {
     while (!sv.empty() && std::isspace(static_cast<unsigned char>(sv.front()))) {
         sv.remove_prefix(1);
     }
@@ -17,7 +10,7 @@ inline std::string_view trimView(std::string_view sv) {
     return sv;
 }
 
-inline bool isAllDigits(std::string_view sv) {
+bool isAllDigits(std::string_view sv) {
     if (sv.empty()) return false;
     for (unsigned char c : sv) {
         if (!std::isdigit(c)) return false;
@@ -25,14 +18,14 @@ inline bool isAllDigits(std::string_view sv) {
     return true;
 }
 
-inline std::string toUpperAscii(std::string_view input) {
+std::string toUpperAscii(std::string_view input) {
     std::string out(input);
     std::transform(out.begin(), out.end(), out.begin(),
         [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     return out;
 }
 
-inline std::vector<std::string_view> tokenizeWhitespace(std::string_view text) {
+std::vector<std::string_view> tokenizeWhitespace(std::string_view text) {
     std::vector<std::string_view> tokens;
     size_t i = 0;
     const size_t n = text.size();
@@ -52,7 +45,7 @@ inline std::vector<std::string_view> tokenizeWhitespace(std::string_view text) {
     return tokens;
 }
 
-inline std::string_view canonicalizeToken(std::string_view rawToken) {
+std::string_view canonicalizeToken(std::string_view rawToken) {
     static const std::unordered_map<std::string_view, std::string_view> kAliases = {
         // Street types
         {"STREET", "ST"},      {"ST.", "ST"},      {"STR", "ST"},
@@ -79,7 +72,7 @@ inline std::string_view canonicalizeToken(std::string_view rawToken) {
     return (it != kAliases.end()) ? it->second : rawToken;
 }
 
-inline std::string normalizeStreetName(std::string_view rawStreetName) {
+std::string normalizeStreetName(std::string_view rawStreetName) {
     std::string upper = toUpperAscii(rawStreetName);
     auto rawTokens = tokenizeWhitespace(upper);
 
@@ -95,7 +88,7 @@ inline std::string normalizeStreetName(std::string_view rawStreetName) {
     return normalized;
 }
 
-inline ParsedAddress parseStreetAddress(std::string_view rawAddress) {
+ParsedAddress parseStreetAddress(std::string_view rawAddress) {
     ParsedAddress out;
     std::string_view rest = trimView(rawAddress);
     if (rest.empty()) return out;

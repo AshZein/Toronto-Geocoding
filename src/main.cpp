@@ -1,5 +1,6 @@
 #include "GeocodingEngine.hpp"
 #include "geocode_point.hpp"
+#include <iostream>
 
 int main() {
     GeocodingEngine engine;

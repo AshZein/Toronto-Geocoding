@@ -23,7 +23,7 @@ std::pair<double, double> getCentroid(const std::vector<std::pair<double, double
 }
 
 // returns centreline_id that matches the given street name and house number, or -1 if not found
-int find_centre_line(std::vector<Centreline> centrelines, int house_number) {
+int find_centre_line(const std::vector<Centreline>& centrelines, int house_number) {
     for (size_t i = 0; i < centrelines.size(); ++i) {
         const Centreline& entry = centrelines[i];
         std::cout << "Centreline ID: " << entry.centreline_id << "\n";
@@ -46,14 +46,14 @@ int find_centre_line(std::vector<Centreline> centrelines, int house_number) {
     return -1;
 }
 
-std::vector<Centreline> find_street_segments(std::string street_name, const GeocodingEngine& engine){
+std::vector<Centreline> find_street_segments(const std::string& street_name, const GeocodingEngine& engine){
     std::vector<Centreline> results;
     results = engine.findStreetSegments(street_name);
 
     return results;
 }
 
-std::pair<double, double> geocode_address(std::string address, const GeocodingEngine& engine) {
+std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine) {
     ParsedAddress parsed = parseStreetAddress(address);
     std::cout << "Parsed Address:\n";
     if (parsed.house_number.has_value()) {

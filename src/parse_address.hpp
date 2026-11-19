@@ -1,4 +1,11 @@
 #pragma once
+#include <algorithm>
+#include <cctype>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
 
 struct ParsedAddress {
     std::optional<int> house_number;
@@ -8,11 +15,10 @@ struct ParsedAddress {
 };
 
 
-
-inline std::string_view trimView(std::string_view sv);
-inline bool isAllDigits(std::string_view sv);
-inline std::string toUpperAscii(std::string_view input);
-inline std::vector<std::string_view> tokenizeWhitespace(std::string_view text);
-inline std::string_view canonicalizeToken(std::string_view rawToken);
-inline std::string normalizeStreetName(std::string_view rawStreetName);
-inline ParsedAddress parseStreetAddress(std::string_view rawAddress);
+std::string_view trimView(std::string_view sv);
+bool isAllDigits(std::string_view sv);
+std::string toUpperAscii(std::string_view input);
+std::vector<std::string_view> tokenizeWhitespace(std::string_view text);
+std::string_view canonicalizeToken(std::string_view rawToken);
+std::string normalizeStreetName(std::string_view rawStreetName);
+ParsedAddress parseStreetAddress(std::string_view rawAddress);
