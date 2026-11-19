@@ -7,28 +7,30 @@
 #include "parse_address.hpp"
 #include "utils/coordinate_geometry.hpp"
 
-// returns centreline_id that matches the given street name and house number, or -1 if not found
-int find_centre_line(const std::vector<Centreline>& centrelines, int address_number) {
+// returns centreline that matches the given street name and house number, or -1 if not found
+Centreline find_centre_line(const std::vector<Centreline>& centrelines, int address_number) {
     for (size_t i = 0; i < centrelines.size(); ++i) {
         const Centreline& entry = centrelines[i];
-        std::cout << "Centreline ID: " << entry.centreline_id << "\n";
-        std::cout << "Street Name: " << entry.street_name << "\n";
-        std::cout << "Left Range: [" << entry.lo_num_l << ", " << entry.hi_num_l << "]\n";
-        std::cout << "Right Range: [" << entry.lo_num_r << ", " << entry.hi_num_r << "]\n";
-        std::cout << "Coordinates (" << entry.coordinates.size() << " points):\n";
-        for (const auto& coord : entry.coordinates) {
-            std::cout << "  Lon: " << coord.first << ", Lat: " << coord.second << "\n";
-        }
-        std::cout << "----------------------------------------\n";
+        // std::cout << "Centreline ID: " << entry.centreline_id << "\n";
+        // std::cout << "Street Name: " << entry.street_name << "\n";
+        // std::cout << "Left Range: [" << entry.lo_num_l << ", " << entry.hi_num_l << "]\n";
+        // std::cout << "Right Range: [" << entry.lo_num_r << ", " << entry.hi_num_r << "]\n";
+        // std::cout << "Coordinates (" << entry.coordinates.size() << " points):\n";
+        // for (const auto& coord : entry.coordinates) {
+        //     std::cout << "  Lon: " << coord.first << ", Lat: " << coord.second << "\n";
+        // }
+        // std::cout << "----------------------------------------\n";
 
         // Check if the house number falls within either the left or right range
         if ((address_number >= entry.lo_num_l && address_number <= entry.hi_num_l) ||
             (address_number >= entry.lo_num_r && address_number <= entry.hi_num_r)) {
-            std::cout << "Match found for house number " << address_number << " in centreline ID " << entry.centreline_id << "\n";
-            return entry.centreline_id;
+            //std::cout << "Match found for house number " << address_number << " in centreline ID " << entry.centreline_id << "\n";
+            return entry;
         }
     }
-    return -1;
+    Centreline notFound;
+    notFound.centreline_id = -1; // Indicate not found
+    return notFound;
 }
 
 std::vector<Centreline> find_street_segments(const std::string& street_name, const GeocodingEngine& engine){
@@ -142,31 +144,39 @@ std::pair<double, double> geocode_address(const std::string& address, const Geoc
     std::cout << "  Street Name: " << parsed.street_name << "\n";
     std::cout << "  Leftover: " << parsed.leftover << "\n";
 
-    int matched_centreline_id = -1;
+    Centreline matched_centreline;;
     if (parsed.address_number.has_value()) {
         std::vector<Centreline> centrelines = find_street_segments(parsed.street_name, engine);
-        matched_centreline_id = find_centre_line(centrelines, parsed.address_number.value());
-    }  
+        matched_centreline = find_centre_line(centrelines, parsed.address_number.value());
+        //matched_centreline = centrelines.empty() ? -1 : centrelines[0].centreline_id;
+    }else{
+        std::cout << "No house number provided in the address.\n";
+        return {0.0, 0.0}; // Placeholder for actual geocoded coordinates
+    }
 
-    if (matched_centreline_id != -1) {
-        std::cout << "Matched Centreline ID: " << matched_centreline_id << "\n";
-        std::vector<AddressPoint> addressPoints = engine.findAddressPointsByCentreline(matched_centreline_id);
+
+
+    if (matched_centreline.centreline_id != -1) {
+        std::cout << "Matched Centreline ID: " << matched_centreline.centreline_id << "\n";
+        std::vector<AddressPoint> addressPoints = engine.findAddressPointsByCentreline(matched_centreline.centreline_id);
         if (!addressPoints.empty()) {
-            std::cout << "Found " << addressPoints.size() << " address points for centreline ID " << matched_centreline_id << ":\n";
+            std::cout << "Found " << addressPoints.size() << " address points for centreline ID " << matched_centreline.centreline_id << ":\n";
             std::pair<AddressPoint, AddressPoint> closestPoints = find_closest_address_points(addressPoints, parsed.address_number.value());
 
+            std::pair<double, double> geocodedLocation;
             if (closestPoints.first.address_number != -1 && closestPoints.second.address_number != -1) {
                 std::cout << "Closest Lower Address Point: " << closestPoints.first.address_number << " at (" << closestPoints.first.lon << ", " << closestPoints.first.lat << ")\n";
                 std::cout << "Closest Higher Address Point: " << closestPoints.second.address_number << " at (" << closestPoints.second.lon << ", " << closestPoints.second.lat << ")\n";
 
-                std::pair<double, double> geocodedLocation = find_lon_lat(closestPoints.first, closestPoints.second, parsed.address_number.value());
+                geocodedLocation = find_lon_lat(closestPoints.first, closestPoints.second, parsed.address_number.value());
                 std::cout << "Geocoded Location: (" << geocodedLocation.first << ", " << geocodedLocation.second << ")\n";
                 return geocodedLocation;
             } else {
                 std::cout << "Could not find valid closest address points for interpolation.\n";
+                geocodedLocation = find_lon_lat(matched_centreline, parsed.address_number.value());
             }
         } else {
-            std::cout << "No address points found for centreline ID " << matched_centreline_id << ".\n";
+            std::cout << "No address points found for centreline ID " << matched_centreline.centreline_id << ".\n";
             // TODO: If no address points are found, we must divide the entire line segment into equal parts and return the midpoint of the segment as the geocoded location
         }
 
