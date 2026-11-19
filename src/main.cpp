@@ -1,12 +1,15 @@
 #include "GeocodingEngine.hpp"
 #include "geocode_point.hpp"
 #include <iostream>
+#include <chrono>
 
 int main() {
     GeocodingEngine engine;
     if (!engine.initialize("data/toronto_centreline.gpkg", "data/address_points.gpkg")) {
         return 1;
     }
+
+    
 
     // Test a quick query lookup
     // std::vector<Centreline> results = engine.findStreetSegments("King St W");
@@ -24,7 +27,15 @@ int main() {
     //               << entry.coordinates.size() << " points\n";
     // }
 
+
+    using clock = std::chrono::steady_clock;
+    using ms_double = std::chrono::duration<double, std::milli>;
+    const auto start = clock::now();
     std::pair<double, double> location = geocode_address("123 King St W", engine);
+    const auto end = clock::now();
+    const double elapsed_ms = ms_double(end - start).count();
+   
     std::cout << "Geocoded location: (" << location.first << ", " << location.second << ")\n";
+     std::cout << "Geocoding took " << elapsed_ms << " ms\n";
     return 0;
 }
