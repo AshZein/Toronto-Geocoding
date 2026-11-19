@@ -62,10 +62,22 @@ std::string_view canonicalizeToken(std::string_view rawToken) {
         {"CIRCLE", "CIR"},     {"CIR.", "CIR"},
 
         // Directionals
-        {"NORTH", "N"},        {"N.", "N"},
-        {"SOUTH", "S"},        {"S.", "S"},
-        {"EAST", "E"},         {"E.", "E"},
-        {"WEST", "W"},         {"W.", "W"},
+            {"NORTH", "N"},        {"NORTH.", "N"},       {"N.", "N"},
+            {"SOUTH", "S"},        {"SOUTH.", "S"},       {"S.", "S"},
+            {"EAST", "E"},         {"EAST.", "E"},        {"E.", "E"},
+            {"WEST", "W"},         {"WEST.", "W"},        {"W.", "W"},
+            {"NORTHEAST", "NE"},   {"NORTHEAST.", "NE"},  {"NE.", "NE"},
+            {"NORTHWEST", "NW"},   {"NORTHWEST.", "NW"},  {"NW.", "NW"},
+            {"SOUTHEAST", "SE"},   {"SOUTHEAST.", "SE"},  {"SE.", "SE"},
+            {"SOUTHWEST", "SW"},   {"SOUTHWEST.", "SW"},  {"SW.", "SW"},
+        // Common abbreviations
+        {"ST", "ST"},          {"AVE", "AVE"},       {"BLVD", "BLVD"},
+        {"DR", "DR"},          {"RD", "RD"},         {"CT", "CT"},
+        {"CRES", "CRES"},      {"PL", "PL"},         {"PKWY", "PKWY"},
+        {"TRL", "TRL"},        {"LN", "LN"},         {"CIR", "CIR"},
+        {"N", "N"},            {"S", "S"},           {"E", "E"},
+        {"W", "W"},            {"NE", "NE"},         {"NW", "NW"},
+        {"SE", "SE"},          {"SW", "SW"}
     };
 
     auto it = kAliases.find(rawToken);
