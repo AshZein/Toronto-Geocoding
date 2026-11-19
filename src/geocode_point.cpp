@@ -53,6 +53,34 @@ std::vector<Centreline> find_street_segments(const std::string& street_name, con
     return results;
 }
 
+/**
+ * Finds the closest address points that bound a target address number.
+ * @param addressPoints The list of address points to search through.
+ * @param target_number The target address number.
+ * @return A pair of the closest lower and higher address points.
+ */
+std::pair<AdressPoint, AddressPoint> find_closest_address_points(const std::vector<AdressPoint>& addressPoints, int target_number) {
+    if (addressPoints.empty()) {
+        return {AddressPoint(), AddressPoint()};
+    }
+
+    AddressPoint closestLower, closestHigher;
+    int lowerNumber = std::numeric_limits<int>::min();
+    int higherNumber = std::numeric_limits<int>::max();
+
+    for (const auto& point : addressPoints) {
+        if (point.address_number <= target_number && point.address_number > lowerNumber) {
+            closestLower = point;
+            lowerNumber = point.address_number;
+        }
+        if (point.address_number >= target_number && point.address_number < higherNumber) {
+            closestHigher = point;
+            higherNumber = point.address_number;
+        }
+    }
+    return {closestLower, closestHigher};
+}
+
 std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine) {
     ParsedAddress parsed = parseStreetAddress(address);
     std::cout << "Parsed Address:\n";
