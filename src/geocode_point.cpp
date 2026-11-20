@@ -198,11 +198,7 @@ std::pair<double, double> interpolateWithTightestBounds(
 
 std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine) {
     ParsedAddress parsed = parseStreetAddress(address);
-    std::cout << "Parsed Address:\n";
-    if (parsed.address_number.has_value()) {
-        std::cout << "  House Number: " << parsed.address_number.value() << "\n";
-    } else {
-        std::cout << "  House Number: (not found)\n";
+    if (!parsed.address_number.has_value()) {
         return {0.0, 0.0};
     }
 
