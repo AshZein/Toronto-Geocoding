@@ -32,13 +32,13 @@ double calculate_distance(double lon1, double lat1, double lon2, double lat2) {
 }
 
 /* 
- * Calculates the orientation of three points.
+ * Calculates the direction of three points.
  * @param a The first point.
  * @param b The second point.
  * @param c The third point.
- * @return The orientation of the three points.
+ * @return The direction of the three points.
  */
-double orient(Pt a, Pt b, Pt c) {
+double direction(Pt a, Pt b, Pt c) {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
@@ -65,10 +65,10 @@ bool onSegment(Pt p, Pt q, Pt r, double eps) {
  * @return True if the line segments intersect, false otherwise.
  */
 bool segmentsIntersect(Pt p1, Pt p2, Pt q1, Pt q2, double eps) {
-    double o1 = orient(p1, p2, q1);
-    double o2 = orient(p1, p2, q2);
-    double o3 = orient(q1, q2, p1);
-    double o4 = orient(q1, q2, p2);
+    double o1 = direction(p1, p2, q1);
+    double o2 = direction(p1, p2, q2);
+    double o3 = direction(q1, q2, p1);
+    double o4 = direction(q1, q2, p2);
 
     if (((o1 > eps && o2 < -eps) || (o1 < -eps && o2 > eps)) &&
         ((o3 > eps && o4 < -eps) || (o3 < -eps && o4 > eps))) {

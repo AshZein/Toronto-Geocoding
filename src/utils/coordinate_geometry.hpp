@@ -12,13 +12,13 @@
 
 struct Pt { double x, y; };
 /* 
- * Calculates the orientation of three points.
+ * Calculates the direction of three points.
  * @param a The first point.
  * @param b The second point.
  * @param c The third point.
- * @return The orientation of the three points.
+ * @return The direction of the three points.
  */
-double orient(Pt a, Pt b, Pt c);
+double direction(Pt a, Pt b, Pt c);
 
 /**
  * Checks if a point is on a line segment.
