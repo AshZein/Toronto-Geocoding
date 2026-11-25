@@ -42,12 +42,12 @@ double orient(Pt a, Pt b, Pt c) {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
-bool onSegment(Pt p, Pt q, Pt r, double eps = 1e-12) {
+bool onSegment(Pt p, Pt q, Pt r, double eps) {
     return q.x <= std::max(p.x, r.x) + eps && q.x + eps >= std::min(p.x, r.x) &&
            q.y <= std::max(p.y, r.y) + eps && q.y + eps >= std::min(p.y, r.y);
 }
 
-bool segmentsIntersect(Pt p1, Pt p2, Pt q1, Pt q2, double eps = 1e-12) {
+bool segmentsIntersect(Pt p1, Pt p2, Pt q1, Pt q2, double eps) {
     double o1 = orient(p1, p2, q1);
     double o2 = orient(p1, p2, q2);
     double o3 = orient(q1, q2, p1);
