@@ -324,6 +324,10 @@ std::pair<double, double> geocode_address(const std::string& address1, Direction
         return {0.0, 0.0};
     }
 
+    // have two intersecting centrelines, now have to find something to geocode with. For now, just return the midpoint of the intersection.
+    const auto& centreline1 = intersecting_centrelines.first;
+    const auto& centreline2 = intersecting_centrelines.second;
+    
     // if (matched_centreline.centreline_id == -1) {
     //     std::cout << "No matching centreline found for the given address.\n";
     //     return {0.0, 0.0};
