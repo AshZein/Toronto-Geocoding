@@ -18,7 +18,7 @@ struct Pt { double x, y; };
  * @param c The third point.
  * @return The orientation of the three points.
  */
-double orient(Pt a, Pt b, Pt c)
+double orient(Pt a, Pt b, Pt c);
 
 /**
  * Checks if a point is on a line segment.
@@ -28,7 +28,7 @@ double orient(Pt a, Pt b, Pt c)
  * @param eps The epsilon value for floating-point comparison.
  * @return True if the point is on the line segment, false otherwise.
  */
-bool onSegment(Pt p, Pt q, Pt r, double eps = 1e-12)
+bool onSegment(Pt p, Pt q, Pt r, double eps = 1e-12);
 
 /**
  * Checks if two line segments intersect.
@@ -39,4 +39,4 @@ bool onSegment(Pt p, Pt q, Pt r, double eps = 1e-12)
  * @param eps The epsilon value for floating-point comparison.
  * @return True if the line segments intersect, false otherwise.
  */
-bool segmentsIntersect(Pt p1, Pt p2, Pt q1, Pt q2, double eps = 1e-12)
+bool segmentsIntersect(Pt p1, Pt p2, Pt q1, Pt q2, double eps = 1e-12);
