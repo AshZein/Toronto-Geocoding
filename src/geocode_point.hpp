@@ -20,3 +20,5 @@ std::pair<double, double> find_lon_lat(const AddressPoint& lowerPoint, const Add
 std::pair<double, double> find_lon_lat(const Centreline& centreline, int target_number);
 
 std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine);
+// Find the lon and lat for a target address number using two address strings and a geocoding engine.
+std::pair<double, double> geocode_address(const std::string& address1, const std::string& address2, const GeocodingEngine& engine)
