@@ -317,7 +317,12 @@ std::pair<double, double> geocode_address(const std::string& address1, const std
     std::vector<Centreline> centrelines_1 = find_street_segments(parsed_1.street_name, engine);
     std::vector<Centreline> centrelines_2 = find_street_segments(parsed_2.street_name, engine);
 
+    std::pair<Centreline, Centreline> intersecting_centrelines = find_intersecting_centre_lines(centrelines_1, centrelines_2);
 
+    if(intersecting_centrelines.first.centreline_id == -1 || intersecting_centrelines.second.centreline_id == -1) {
+        std::cout << "No intersecting centrelines found for the given addresses.\n";
+        return {0.0, 0.0};
+    }
 
     // if (matched_centreline.centreline_id == -1) {
     //     std::cout << "No matching centreline found for the given address.\n";
