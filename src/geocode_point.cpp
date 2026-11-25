@@ -208,20 +208,68 @@ std::pair<double, double> interpolateWithTightestBounds(
 
 } // namespace
 
-std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine) {
-    ParsedAddress parsed = parseStreetAddress(address);
+/*
+ * Geocode an address given two address strings and a geocoding engine.
+ * adress1: The primary address string (e.g., "100 KING ST W").
+ * engine: The geocoding engine to use for finding street segments and address points.
+ * Returns a pair of longitude and latitude for the given address.
+ */
+std::pair<double, double> geocode_address(const std::string& address1, const GeocodingEngine& engine) {
+    ParsedAddress parsed = parseStreetAddress(address1);
 
     // If address number is not provided, we can still attempt to find the centreline
     if (!parsed.address_number.has_value()) {
         return {0.0, 0.0}; // Return a default value or handle as needed
-    //     std::vector<Centreline> centrelines = find_street_segments(parsed.street_name, engine);
-    //     Centreline matched_centreline = find_centre_line(centrelines, -1);
-
-    //     return find_lon_lat(matched_centreline, -1); // Use -1 to indicate no specific address number
     }
 
     int target_number = parsed.address_number.value();
     std::vector<Centreline> centrelines = find_street_segments(parsed.street_name, engine);
+    Centreline matched_centreline = find_centre_line(centrelines, target_number);
+
+    if (matched_centreline.centreline_id == -1) {
+        std::cout << "No matching centreline found for the given address.\n";
+        return {0.0, 0.0};
+    }
+
+    std::vector<AddressPoint> addressPoints = engine.findAddressPointsByCentreline(matched_centreline.centreline_id);
+
+    // Path 1: No address points on this centreline -> interpolate along centreline
+    if (addressPoints.empty()) {
+        return find_lon_lat(matched_centreline, target_number);
+    }
+
+    auto [closestLower, closestHigher] = find_closest_address_points(addressPoints, target_number);
+
+    // Path 1: Missing lower or upper bounding address point -> fall back to centreline
+    if (closestLower.address_number == -1 || closestHigher.address_number == -1) {
+        return find_lon_lat(matched_centreline, target_number);
+    }
+
+    // Path 2 & Path 3: Both lower and upper address points exist; tighten either
+    // bound using the segment endpoints if a segment endpoint is tighter.
+    return interpolateWithTightestBounds(matched_centreline, closestLower, closestHigher, target_number);
+}
+
+
+/*
+ * Geocode an address given two address strings and a geocoding engine.
+ * 
+ * adress1: The primary address string (e.g., "100 KING ST W").
+ * address2: An optional secondary address string (e.g., "Eglington AVE").
+ * engine: The geocoding engine to use for finding street segments and address points.
+ * Returns a pair of longitude and latitude for the given address.
+ */
+std::pair<double, double> geocode_address(const std::string& address1, const std::string& address2, const GeocodingEngine& engine) {
+    ParsedAddress parsed1 = parseStreetAddress(address1);
+    ParsedAddress parsed2 = parseStreetAddress(address2);
+
+    // address1 has an address number, so we can use it directly for geocoding
+    if (parsed1.address_number.has_value()) {
+        return geocode_address(address1, engine);
+    }
+
+    int target_number = parsed1.address_number.value();
+    std::vector<Centreline> centrelines = find_street_segments(parsed1.street_name, engine);
     Centreline matched_centreline = find_centre_line(centrelines, target_number);
 
     if (matched_centreline.centreline_id == -1) {
