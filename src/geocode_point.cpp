@@ -35,11 +35,41 @@ Centreline find_centre_line(const std::vector<Centreline>& centrelines, int addr
     notFound.centreline_id = -1; // Indicate not found
     return notFound;
 }
+ /**
+ * Checks if two centre lines intersect using the segment intersection test.
+ * @param centreline1 The first centre line.
+ * @param centreline2 The second centre line.
+ * @return True if the centre lines intersect, false otherwise.
+ */
+bool is_centreline_intersecting(const Centreline& centreline1, const Centreline& centreline2) {
+    for (size_t i = 1; i < centreline1.coordinates.size(); ++i) {
+        Pt p1{centreline1.coordinates[i - 1].first, centreline1.coordinates[i - 1].second};
+        Pt p2{centreline1.coordinates[i].first, centreline1.coordinates[i].second};
 
+        for (size_t j = 1; j < centreline2.coordinates.size(); ++j) {
+            Pt q1{centreline2.coordinates[j - 1].first, centreline2.coordinates[j - 1].second};
+            Pt q2{centreline2.coordinates[j].first, centreline2.coordinates[j].second};
+
+            if (segmentsIntersect(p1, p2, q1, q2)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+ /**
+ * Finds the first pair of intersecting centre lines between two sets of centre lines.
+ * @param centrelines1 The first set of centre lines.
+ * @param centrelines2 The second set of centre lines.
+ * @return A pair of the intersecting centre lines, or a pair of invalid centre lines if none found.
+ */
 std::pair<Centreline, Centreline> find_intersecting_centre_lines(const std::vector<Centreline>& centrelines1, const std::vector<Centreline>& centrelines2) {
     for (const auto& centreline1 : centrelines1) {
         for (const auto& centreline2 : centrelines2) {
-            continue; // Skip if the centreline IDs are the same
+            
+            if (is_centreline_intersecting(centreline1, centreline2)) {
+                return {centreline1, centreline2};
+            }
         }
     }
     return {Centreline{-1}, Centreline{-1}}; // Return invalid centrelines if no intersection found
