@@ -22,7 +22,7 @@ enum class Direction : int {
     West
 };
 
-Direction parse_direction(std::string_view token)
+Direction parse_direction(std::string_view token);
 std::string_view trimView(std::string_view sv);
 bool isAllDigits(std::string_view sv);
 std::string toUpperAscii(std::string_view input);
