@@ -289,26 +289,28 @@ std::pair<double, double> geocode_address(const std::string& address1, const std
 
 
 
-    if (matched_centreline.centreline_id == -1) {
-        std::cout << "No matching centreline found for the given address.\n";
-        return {0.0, 0.0};
-    }
+    // if (matched_centreline.centreline_id == -1) {
+    //     std::cout << "No matching centreline found for the given address.\n";
+    //     return {0.0, 0.0};
+    // }
 
-    std::vector<AddressPoint> addressPoints = engine.findAddressPointsByCentreline(matched_centreline.centreline_id);
+    // std::vector<AddressPoint> addressPoints = engine.findAddressPointsByCentreline(matched_centreline.centreline_id);
 
-    // Path 1: No address points on this centreline -> interpolate along centreline
-    if (addressPoints.empty()) {
-        return find_lon_lat(matched_centreline, target_number);
-    }
+    // // Path 1: No address points on this centreline -> interpolate along centreline
+    // if (addressPoints.empty()) {
+    //     return find_lon_lat(matched_centreline, target_number);
+    // }
 
-    auto [closestLower, closestHigher] = find_closest_address_points(addressPoints, target_number);
+    // auto [closestLower, closestHigher] = find_closest_address_points(addressPoints, target_number);
 
-    // Path 1: Missing lower or upper bounding address point -> fall back to centreline
-    if (closestLower.address_number == -1 || closestHigher.address_number == -1) {
-        return find_lon_lat(matched_centreline, target_number);
-    }
+    // // Path 1: Missing lower or upper bounding address point -> fall back to centreline
+    // if (closestLower.address_number == -1 || closestHigher.address_number == -1) {
+    //     return find_lon_lat(matched_centreline, target_number);
+    // }
 
-    // Path 2 & Path 3: Both lower and upper address points exist; tighten either
-    // bound using the segment endpoints if a segment endpoint is tighter.
-    return interpolateWithTightestBounds(matched_centreline, closestLower, closestHigher, target_number);
+    // // Path 2 & Path 3: Both lower and upper address points exist; tighten either
+    // // bound using the segment endpoints if a segment endpoint is tighter.
+    // return interpolateWithTightestBounds(matched_centreline, closestLower, closestHigher, target_number);
+
+    return {0.0, 0.0}; // Return a default value or handle as needed
 }
