@@ -10,6 +10,7 @@
 
 // returns centreline_id that matches the given street name and house number, or -1 if not found
 Centreline find_centre_line(const std::vector<Centreline>& centrelines, int house_number);
+std::pair<Centreline, Centreline> find_intersecting_centre_lines(const std::vector<Centreline>& centrelines1, const std::vector<Centreline>& centrelines2)
 std::vector<Centreline> find_street_segments(const std::string& street_name, const GeocodingEngine& engine);
 
 // Find the lon and lat for a target address number using two bounding address points.
