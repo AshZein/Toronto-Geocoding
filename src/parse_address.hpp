@@ -14,7 +14,15 @@ struct ParsedAddress {
     std::string leftover;      // optional: city/postal if included
 };
 
+enum class Direction : int {
+    None = 0,
+    North,
+    East,
+    South,
+    West
+};
 
+Direction parse_direction(std::string_view token)
 std::string_view trimView(std::string_view sv);
 bool isAllDigits(std::string_view sv);
 std::string toUpperAscii(std::string_view input);

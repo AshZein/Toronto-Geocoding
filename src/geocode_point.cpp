@@ -301,7 +301,7 @@ std::pair<double, double> geocode_address(const std::string& address1, const Geo
  * engine: The geocoding engine to use for finding street segments and address points.
  * Returns a pair of longitude and latitude for the given address.
  */
-std::pair<double, double> geocode_address(const std::string& address1, const std::string& direction, const std::string& address2, const GeocodingEngine& engine) {
+std::pair<double, double> geocode_address(const std::string& address1, Direction direction, const std::string& address2, const GeocodingEngine& engine) {
     ParsedAddress parsed_1 = parseStreetAddress(address1);
     ParsedAddress parsed_2 = parseStreetAddress(address2);
 

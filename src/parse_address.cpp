@@ -1,5 +1,13 @@
 #include "parse_address.hpp"
 
+Direction parse_direction(std::string_view token) {
+    if (token == "N/O" || token == "N" || token == "NORTH") return Direction::North;
+    if (token == "E/O" || token == "E" || token == "EAST")  return Direction::East;
+    if (token == "S/O" || token == "S" || token == "SOUTH") return Direction::South;
+    if (token == "W/O" || token == "W" || token == "WEST")  return Direction::West;
+    return Direction::None;
+}
+
 std::string_view trimView(std::string_view sv) {
     while (!sv.empty() && std::isspace(static_cast<unsigned char>(sv.front()))) {
         sv.remove_prefix(1);
