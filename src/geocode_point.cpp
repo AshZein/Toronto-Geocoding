@@ -11,6 +11,17 @@
 
 // returns centreline that matches the given street name and house number, or -1 if not found
 Centreline find_centre_line(const std::vector<Centreline>& centrelines, int address_number) {
+    if (address_number < 0) {
+        // If address_number is negative, return the first centreline (or handle as needed)
+        if (!centrelines.empty()) {
+            return centrelines.front();
+        } else {
+            Centreline notFound;
+            notFound.centreline_id = -1; // Indicate not found
+            return notFound;
+        }
+    }
+
     for (size_t i = 0; i < centrelines.size(); ++i) {
         const Centreline& entry = centrelines[i];
 
@@ -97,6 +108,7 @@ std::pair<double, double> find_lon_lat(const Centreline& centreline, int target_
     std::vector<double> segment_lengths;
     segment_lengths.reserve(centreline.coordinates.size() - 1);
 
+    // calculate the length of each segment and the total length of the centreline
     for (size_t i = 1; i < centreline.coordinates.size(); ++i) {
         double lon1 = centreline.coordinates[i - 1].first;
         double lat1 = centreline.coordinates[i - 1].second;
@@ -198,8 +210,14 @@ std::pair<double, double> interpolateWithTightestBounds(
 
 std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine) {
     ParsedAddress parsed = parseStreetAddress(address);
+
+    // If address number is not provided, we can still attempt to find the centreline
     if (!parsed.address_number.has_value()) {
-        return {0.0, 0.0};
+        return {0.0, 0.0}; // Return a default value or handle as needed
+    //     std::vector<Centreline> centrelines = find_street_segments(parsed.street_name, engine);
+    //     Centreline matched_centreline = find_centre_line(centrelines, -1);
+
+    //     return find_lon_lat(matched_centreline, -1); // Use -1 to indicate no specific address number
     }
 
     int target_number = parsed.address_number.value();
