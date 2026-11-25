@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GeocodingEngine.hpp"
+#include "parse_address.hpp"
 
 #include <string>
 #include <utility>
