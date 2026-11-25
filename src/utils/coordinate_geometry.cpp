@@ -30,3 +30,38 @@ double calculate_distance(double lon1, double lat1, double lon2, double lat2) {
     const double earthRadius = 6371000.0;
     return earthRadius * c;
 }
+
+/* 
+ * Calculates the orientation of three points.
+ * @param a The first point.
+ * @param b The second point.
+ * @param c The third point.
+ * @return The orientation of the three points.
+ */
+double orient(Pt a, Pt b, Pt c) {
+    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+}
+
+bool onSegment(Pt p, Pt q, Pt r, double eps = 1e-12) {
+    return q.x <= std::max(p.x, r.x) + eps && q.x + eps >= std::min(p.x, r.x) &&
+           q.y <= std::max(p.y, r.y) + eps && q.y + eps >= std::min(p.y, r.y);
+}
+
+bool segmentsIntersect(Pt p1, Pt p2, Pt q1, Pt q2, double eps = 1e-12) {
+    double o1 = orient(p1, p2, q1);
+    double o2 = orient(p1, p2, q2);
+    double o3 = orient(q1, q2, p1);
+    double o4 = orient(q1, q2, p2);
+
+    if (((o1 > eps && o2 < -eps) || (o1 < -eps && o2 > eps)) &&
+        ((o3 > eps && o4 < -eps) || (o3 < -eps && o4 > eps))) {
+        return true;
+    }
+
+    if (std::abs(o1) <= eps && onSegment(p1, q1, p2, eps)) return true;
+    if (std::abs(o2) <= eps && onSegment(p1, q2, p2, eps)) return true;
+    if (std::abs(o3) <= eps && onSegment(q1, p1, q2, eps)) return true;
+    if (std::abs(o4) <= eps && onSegment(q1, p2, q2, eps)) return true;
+
+    return false;
+}
