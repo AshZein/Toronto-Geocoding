@@ -21,4 +21,4 @@ std::pair<double, double> find_lon_lat(const Centreline& centreline, int target_
 
 std::pair<double, double> geocode_address(const std::string& address, const GeocodingEngine& engine);
 // Find the lon and lat for a target address number using two address strings and a geocoding engine.
-std::pair<double, double> geocode_address(const std::string& address1, const std::string& address2, const GeocodingEngine& engine)
+std::pair<double, double> geocode_address(const std::string& address1, const std::string& direction,const std::string& address2, const GeocodingEngine& engine)

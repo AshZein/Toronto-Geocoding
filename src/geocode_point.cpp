@@ -36,6 +36,15 @@ Centreline find_centre_line(const std::vector<Centreline>& centrelines, int addr
     return notFound;
 }
 
+std::pair<Centreline, Centreline> find_intersecting_centre_lines(const std::vector<Centreline>& centrelines1, const std::vector<Centreline>& centrelines2) {
+    for (const auto& centreline1 : centrelines1) {
+        for (const auto& centreline2 : centrelines2) {
+            continue; // Skip if the centreline IDs are the same
+        }
+    }
+    return {Centreline{-1}, Centreline{-1}}; // Return invalid centrelines if no intersection found
+}
+
 std::vector<Centreline> find_street_segments(const std::string& street_name, const GeocodingEngine& engine) {
     return engine.findStreetSegments(street_name);
 }
@@ -257,20 +266,28 @@ std::pair<double, double> geocode_address(const std::string& address1, const Geo
  * adress1: The primary address string (e.g., "100 KING ST W").
  * address2: An optional secondary address string (e.g., "Eglington AVE").
  * engine: The geocoding engine to use for finding street segments and address points.
+ * direction: The direction of the address (e.g., "N", "S", "E", "W").
+ * address2: An optional secondary address string (e.g., "Eglington AVE").
+ * engine: The geocoding engine to use for finding street segments and address points.
  * Returns a pair of longitude and latitude for the given address.
  */
-std::pair<double, double> geocode_address(const std::string& address1, const std::string& address2, const GeocodingEngine& engine) {
-    ParsedAddress parsed1 = parseStreetAddress(address1);
-    ParsedAddress parsed2 = parseStreetAddress(address2);
+std::pair<double, double> geocode_address(const std::string& address1, const std::string& direction, const std::string& address2, const GeocodingEngine& engine) {
+    ParsedAddress parsed_1 = parseStreetAddress(address1);
+    ParsedAddress parsed_2 = parseStreetAddress(address2);
 
     // address1 has an address number, so we can use it directly for geocoding
-    if (parsed1.address_number.has_value()) {
+    if (parsed_1.address_number.has_value()) {
         return geocode_address(address1, engine);
     }
 
-    int target_number = parsed1.address_number.value();
-    std::vector<Centreline> centrelines = find_street_segments(parsed1.street_name, engine);
-    Centreline matched_centreline = find_centre_line(centrelines, target_number);
+    if (parsed_2.address_number.has_value()) {
+        return geocode_address(address2, engine);
+    }
+
+    std::vector<Centreline> centrelines_1 = find_street_segments(parsed_1.street_name, engine);
+    std::vector<Centreline> centrelines_2 = find_street_segments(parsed_2.street_name, engine);
+
+
 
     if (matched_centreline.centreline_id == -1) {
         std::cout << "No matching centreline found for the given address.\n";
