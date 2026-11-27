@@ -11,3 +11,5 @@ This geocoder relies on two datasets which are provided by the City of Toronto a
     - A dataset where each entry represents streets/roads, walkways, rivers, railways, and highways.
     - Each line segment is described with a series of attributes including a unique identifier, name, feature code, and address ranges.
     - https://open.toronto.ca/dataset/toronto-centreline-tcl/
+
+This geocoder works by inerpolation using the existing address to coordinate maps provided by the Address Points and Centreline datasets. 
